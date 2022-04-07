@@ -9,17 +9,19 @@ import gg.jte.output.StringOutput;
 import gg.jte.resolve.ResourceCodeResolver;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Objects;
+import java.util.stream.Stream;
 
 import static java.net.http.HttpResponse.BodyHandlers;
 import static java.util.Comparator.comparing;
@@ -59,6 +61,19 @@ public class Main {
         }
     }
 
+    public static HttpResponse<InputStream> getUrl(HttpClient client, String url) throws InterruptedException, IOException {
+        var req = HttpRequest.newBuilder(URI.create(url)).GET().build();
+        IOException exception = null;
+        for (int i = 0; i < MAX_TRIES; i++) {
+            try {
+                return client.send(req, BodyHandlers.ofInputStream());
+            } catch (IOException e) {
+                exception = e;
+            }
+        }
+        throw exception;
+    }
+
     public static void main(String[] args) throws IOException, InterruptedException {
         if (args == null || args.length < 1) {
             System.err.println("Must provide filename with URLs.");
@@ -67,29 +82,22 @@ public class Main {
         var path = Path.of(args[0]);
         var client = HttpClient.newHttpClient();
 
-        var items = new ArrayList<FeedItem>();
-        for (String url : Files.readAllLines(path)) {
-            for (int tries = 0; tries < MAX_TRIES; tries++) {
-                try {
-                    tries++;
-                    var req = HttpRequest.newBuilder(URI.create(url)).GET().build();
-                    var resp = client.send(req, BodyHandlers.ofInputStream());
-
-                    var feedInput = new SyndFeedInput();
-                    feedInput.setXmlHealerOn(true);
-                    feedInput.build(new InputStreamReader(resp.body())).getEntries().stream()
-                            .map(FeedItem::fromEntry).sorted().limit(10).forEach(items::add);
-                } catch (IOException e) {
-                    if (tries < MAX_TRIES) continue;
-                    System.err.printf("Failed to fetch url after %s tries: %s%n", tries, url);
-                    e.printStackTrace();
-                } catch (IllegalArgumentException | FeedException e) {
-                    System.err.printf("Failed to process url '%s': %s%n", url, e.getMessage());
-                    break;
-                }
+        var items = Files.lines(path).parallel().flatMap(url -> {
+            try {
+                var resp = getUrl(client, url);
+                var feedInput = new SyndFeedInput();
+                feedInput.setXmlHealerOn(true);
+                return feedInput.build(new InputStreamReader(resp.body())).getEntries().stream()
+                        .map(FeedItem::fromEntry).sorted().limit(10);
+            } catch (IOException e) {
+                System.err.printf("Failed to fetch url after %s tries: %s%n", MAX_TRIES, url);
+            } catch (IllegalArgumentException | FeedException e) {
+                System.err.printf("Failed to process url '%s': %s%n", url, e.getMessage());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
             }
-        }
-        items.sort(FeedItem::compareTo);
+            return Stream.empty();
+        }).sorted(FeedItem::compareTo).toList();
 
         var resolver = new ResourceCodeResolver("templates");
         var templateEngine = TemplateEngine.create(resolver, ContentType.Html);
