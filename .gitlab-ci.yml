@@ -2,10 +2,10 @@ variables:
   NODE_ENV: production
 
 build:java:
-  image: gradle:jdk17
+  image: openjdk:17
   stage: build
   script:
-    - gradle installDist
+    - ./gradlew --no-daemon --build-cache --gradle-user-home cache/ installDist
     - mv build/install/feed4j ./
   rules:
     - if: '$CI_PIPELINE_SOURCE != "schedule"'
@@ -15,6 +15,13 @@ build:java:
   artifacts:
     paths:
       - feed4j
+  cache:
+    paths:
+      - cache/caches/ 
+      - cache/notifications/ 
+      - cache/wrapper/
+
+
 
 build:css:
   image: node:14.4-alpine3.11

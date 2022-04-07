@@ -1,6 +1,6 @@
 module.exports = {
   purge: [
-      './resources/main.hbs',
+      './src/main/resources/templates/index.jte',
   ],
   theme: {
     extend: {
