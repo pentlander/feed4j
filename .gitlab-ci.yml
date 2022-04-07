@@ -2,7 +2,7 @@ variables:
   NODE_ENV: production
 
 build:java:
-  image: openjdk:17
+  image: openjdk:17-bullseye
   stage: build
   script:
     - ./gradlew --no-daemon --build-cache --gradle-user-home cache/ installDist
@@ -28,7 +28,7 @@ build:css:
       - index.css
 
 pages:
-  image: openjdk:17
+  image: openjdk:17-bullseye
   stage: deploy
   script:
     - mkdir public
