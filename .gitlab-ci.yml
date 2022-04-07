@@ -1,0 +1,42 @@
+variables:
+  NODE_ENV: production
+
+build:java:
+  image: gradle:jdk17
+  stage: build
+  script:
+    - gradle installDist
+    - mv build/install/feed4j ./
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "schedule"'
+      changes:
+        - src/*
+      when: always
+  artifacts:
+    paths:
+      - feed4j
+
+build:css:
+  image: node:14.4-alpine3.11
+  stage: build
+  script:
+    - npx tailwindcss-cli build main.css -o index.css
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "schedule"'
+      changes:
+        - resources/*
+      when: always
+  artifacts:
+    paths:
+      - index.css
+
+pages:
+  image: openjdk:17
+  stage: deploy
+  script:
+    - mkdir public
+    - ./feed4j/bin/feed4j feed_urls.txt > public/index.html
+    - mv index.css public/index.css
+  artifacts:
+    paths:
+      - public
