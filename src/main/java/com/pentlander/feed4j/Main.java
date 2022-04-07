@@ -16,8 +16,10 @@ import java.net.URISyntaxException;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpTimeoutException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -62,11 +64,13 @@ public class Main {
     }
 
     public static HttpResponse<InputStream> getUrl(HttpClient client, String url) throws InterruptedException, IOException {
-        var req = HttpRequest.newBuilder(URI.create(url)).GET().build();
+        var req = HttpRequest.newBuilder(URI.create(url)).timeout(Duration.ofSeconds(5)).GET().build();
         IOException exception = null;
         for (int i = 0; i < MAX_TRIES; i++) {
             try {
                 return client.send(req, BodyHandlers.ofInputStream());
+            } catch (HttpTimeoutException e) {
+                throw e;
             } catch (IOException e) {
                 exception = e;
             }
@@ -74,7 +78,7 @@ public class Main {
         throw exception;
     }
 
-    public static void main(String[] args) throws IOException, InterruptedException {
+    public static void main(String[] args) throws IOException {
         if (args == null || args.length < 1) {
             System.err.println("Must provide filename with URLs.");
             System.exit(1);
