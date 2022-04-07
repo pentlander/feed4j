@@ -84,8 +84,7 @@ public class Main {
                     System.err.printf("Failed to fetch url after %s tries: %s%n", tries, url);
                     e.printStackTrace();
                 } catch (IllegalArgumentException | FeedException e) {
-                    System.err.printf("Failed: %s%n", url);
-                    e.printStackTrace();
+                    System.err.printf("Failed to process url '%s': %s%n", url, e.getMessage());
                     break;
                 }
             }
