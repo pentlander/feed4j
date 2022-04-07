@@ -84,7 +84,9 @@ public class Main {
 
         var items = Files.lines(path).parallel().flatMap(url -> {
             try {
+                System.err.println("Fetching url: " + url);
                 var resp = getUrl(client, url);
+                System.err.println("Got url: " + url);
                 var feedInput = new SyndFeedInput();
                 feedInput.setXmlHealerOn(true);
                 return feedInput.build(new InputStreamReader(resp.body())).getEntries().stream()
