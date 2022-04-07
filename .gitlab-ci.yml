@@ -7,11 +7,6 @@ build:java:
   script:
     - ./gradlew --no-daemon --build-cache --gradle-user-home cache/ installDist
     - mv build/install/feed4j ./
-  rules:
-    - if: '$CI_PIPELINE_SOURCE != "schedule"'
-      changes:
-        - src/*
-      when: always
   artifacts:
     paths:
       - feed4j
@@ -28,11 +23,6 @@ build:css:
   stage: build
   script:
     - npx tailwindcss-cli build main.css -o index.css
-  rules:
-    - if: '$CI_PIPELINE_SOURCE != "schedule"'
-      changes:
-        - resources/*
-      when: always
   artifacts:
     paths:
       - index.css
