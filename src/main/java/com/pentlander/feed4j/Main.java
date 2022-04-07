@@ -96,7 +96,7 @@ public class Main {
                 return feedInput.build(new InputStreamReader(resp.body())).getEntries().stream()
                         .map(FeedItem::fromEntry).sorted().limit(10);
             } catch (IOException e) {
-                System.err.printf("Failed to fetch url after %s tries: %s%n", MAX_TRIES, url);
+                System.err.printf("Failed to fetch url '%s' after %s tries: %s%n", url, MAX_TRIES, e.getMessage());
             } catch (IllegalArgumentException | FeedException e) {
                 System.err.printf("Failed to process url '%s': %s%n", url, e.getMessage());
             } catch (InterruptedException e) {
