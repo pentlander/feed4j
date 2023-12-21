@@ -1,0 +1,20 @@
+[package]
+name = "feed4j"
+version = "0.1"
+java_version = "21"
+
+[main]
+module = "feed4j"
+class = "com.pentlander.feed4j.Main"
+
+[dependencies]
+compile = [
+    { coordinate = "gg.jte:jte:2.0.1", transitive = ["gg.jte:jte-runtime"] },
+    { coordinate = "com.rometools:rome:1.18.0", transitive = ["org.jdom:jdom2"] },
+    "org.slf4j:slf4j-nop:1.7.36",
+]
+
+test = [
+    "org.junit.jupiter:junit-jupiter-api:5.6.0",
+    "org.junit.jupiter:junit-jupiter-engine:5.6.0",
+]
